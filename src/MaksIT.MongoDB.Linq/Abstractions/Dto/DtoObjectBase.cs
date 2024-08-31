@@ -4,6 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaksIT.MongoDBLinq.Abstractions.Domain {
+namespace MaksIT.MongoDB.Linq.Abstractions.Domain;
   public abstract class DtoObjectBase { }
-}
+

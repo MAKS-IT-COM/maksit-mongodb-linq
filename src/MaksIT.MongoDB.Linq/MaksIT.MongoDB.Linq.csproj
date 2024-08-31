@@ -4,14 +4,26 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <RootNamespace>MaksIT.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 
-  <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
-  </ItemGroup>
+      <!-- NuGet package metadata -->
+      <PackageId>MaksIT.MongoDB.Linq</PackageId>
+      <Version>1.0.0</Version>
+      <Authors>Maksym Sadovnychyy</Authors>
+      <Company>MAKS-IT</Company>
+      <Product>MaksIT.MongoDB.Linq</Product>
+      <Description></Description>
+      <PackageTags></PackageTags>
+      <RepositoryUrl>https://github.com/MAKS-IT-COM/maksit-mongodb-linq</RepositoryUrl>
+      <License>MIT</License>
+      <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+      <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\maksit-results\src\MaksIT.Results\MaksIT.Results.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="MaksIT.Results" Version="1.0.0" />
+      <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
+      <None Include="../../README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
 
 </Project>

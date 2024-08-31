@@ -1,13 +1,14 @@
-﻿using MongoDB.Driver;
+﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
+using MongoDB.Driver;
+using MaksIT.Results;
 
 namespace MaksIT.MongoDB.Linq {
   public interface IMongoSessionManager {
-    Task<DisposableMongoSession> GetOrCreateSessionAsync();
-    void ReleaseSession(DisposableMongoSession session);
+    Result ExecuteInSession(Func<IClientSessionHandle, Result> action);
+    Task<Result> ExecuteInSessionAsync(Func<IClientSessionHandle, Task<Result>> action);
+    Result<T> ExecuteInSession<T>(Func<IClientSessionHandle, Result<T>> action);
+    Task<Result<T>> ExecuteInSessionAsync<T>(Func<IClientSessionHandle, Task<Result<T>>> action);
   }
 
   public class MongoSessionManager : IMongoSessionManager {
@@ -21,7 +22,7 @@ namespace MaksIT.MongoDB.Linq {
       _sessions = new ConcurrentDictionary<string, DisposableMongoSession>();
     }
 
-    public async Task<DisposableMongoSession> GetOrCreateSessionAsync() {
+    private async Task<DisposableMongoSession> GetOrCreateSessionAsync() {
       // Generate a unique session ID
       var sessionId = Guid.NewGuid().ToString();
 
@@ -43,13 +44,122 @@ namespace MaksIT.MongoDB.Linq {
       throw new InvalidOperationException("Failed to create or retrieve session.");
     }
 
-    public void ReleaseSession(DisposableMongoSession session) {
+    private void ReleaseSession(DisposableMongoSession session) {
       if (_sessions.TryRemove(session.SessionId, out var _)) {
         _logger.LogInformation("Releasing and disposing session with ID: {SessionId}", session.SessionId);
         session.Dispose();
       }
       else {
         _logger.LogWarning("Failed to find session with ID: {SessionId} for release.", session.SessionId);
+      }
+    }
+
+    public Result ExecuteInSession(Func<IClientSessionHandle, Result> action) {
+      using var mongoSession = GetOrCreateSessionAsync().Result;
+
+      try {
+        mongoSession.Session.StartTransaction();
+        var result = action(mongoSession.Session);
+
+        if (!result.IsSuccess) {
+          mongoSession.Session.AbortTransaction();
+        }
+        else {
+          mongoSession.Session.CommitTransaction();
+        }
+
+        return result;
+      }
+      catch (Exception ex) {
+        _logger.LogError(ex, "Error during session operation.");
+        return Result.InternalServerError("An error occurred during the operation.");
+      }
+      finally {
+        ReleaseSession(mongoSession);
+        _logger.LogInformation("Session released for session ID: {SessionId}", mongoSession.SessionId);
+      }
+    }
+
+    public async Task<Result> ExecuteInSessionAsync(Func<IClientSessionHandle, Task<Result>> action) {
+      using var mongoSession = await GetOrCreateSessionAsync();
+
+      try {
+        mongoSession.Session.StartTransaction();
+        var result = await action(mongoSession.Session);
+
+        if (!result.IsSuccess) {
+          await mongoSession.Session.AbortTransactionAsync();
+        }
+        else {
+          await mongoSession.Session.CommitTransactionAsync();
+        }
+
+        return result;
+      }
+      catch (Exception ex) {
+        _logger.LogError(ex, "Error during async session operation.");
+        return Result.InternalServerError("An error occurred during the async operation.");
+      }
+      finally {
+        ReleaseSession(mongoSession);
+        _logger.LogInformation("Session released for session ID: {SessionId}", mongoSession.SessionId);
+      }
+    }
+
+    public Result<T> ExecuteInSession<T>(Func<IClientSessionHandle, Result<T>> action) {
+      using var mongoSession = GetOrCreateSessionAsync().Result;
+
+      try {
+        // Start the transaction
+        mongoSession.Session.StartTransaction();
+
+        var result = action(mongoSession.Session);
+
+        if (!result.IsSuccess)
+          // Abort the transaction if the action failed
+          mongoSession.Session.AbortTransaction();
+
+        // Commit the transaction if the action was successful
+        mongoSession.Session.CommitTransaction();
+
+        return result;
+      }
+      catch (Exception ex) {
+        _logger.LogError(ex, "Error during session operation.");
+        return Result<T>.InternalServerError(default, "An error occurred during the operation.");
+      }
+      finally {
+        ReleaseSession(mongoSession);
+        _logger.LogInformation("Session released for session ID: {SessionId}", mongoSession.SessionId);
+      }
+    }
+
+    public async Task<Result<T>> ExecuteInSessionAsync<T>(Func<IClientSessionHandle, Task<Result<T>>> action) {
+      using var mongoSession = await GetOrCreateSessionAsync();
+
+      try {
+        // Start the transaction
+        mongoSession.Session.StartTransaction();
+
+        // Execute the action within the session
+        var result = await action(mongoSession.Session);
+
+        if (!result.IsSuccess)
+          // Abort the transaction if the action failed
+          await mongoSession.Session.AbortTransactionAsync();
+
+        // Commit the transaction if the action was successful
+        await mongoSession.Session.CommitTransactionAsync();
+
+        return result;
+      }
+      catch (Exception ex) {
+        _logger.LogError(ex, "Error during async session operation.");
+        return Result<T>.InternalServerError(default, "An error occurred during the async operation.");
+      }
+      finally {
+        ReleaseSession(mongoSession);
+        _logger.LogInformation("Session released for session ID: {SessionId}", mongoSession.SessionId);
       }
     }
   }

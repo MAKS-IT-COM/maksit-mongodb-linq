@@ -5,13 +5,14 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization;
 
-using MaksIT.MongoDBLinq.Abstractions.Domain;
+using MaksIT.MongoDB.Linq.Abstractions.Domain;
 
 using MaksIT.Results;
 
-namespace MaksIT.Vault.Abstractions {
+namespace MaksIT.MongoDB.Linq.Abstractions {
 
-  public abstract class CollectionDataProviderBase<T, TDomainDocument> : BaseCollectionDataProviderBase<T, TDomainDocument> where TDomainDocument : DtoDocumentBase {
+  public abstract class CollectionDataProviderBase<T, TDtoDocument, TDtoKey> : BaseCollectionDataProviderBase<T, TDtoDocument, TDtoKey>
+    where TDtoDocument : DtoDocumentBase<TDtoKey> {
 
     protected CollectionDataProviderBase(
         ILogger<T> logger,
@@ -22,20 +23,20 @@ namespace MaksIT.Vault.Abstractions {
     ) : base(logger, client, idGenerator, databaseName, collectionName) { }
 
     #region Insert
-    public Result<Guid?> Insert(TDomainDocument obj, IClientSessionHandle? session) =>
+    public Result<TDtoKey?> Insert(TDtoDocument obj, IClientSessionHandle? session) =>
         InsertAsync(obj, session).Result;
     #endregion
 
     #region InsertMany
-    public Result<List<Guid>?> InsertMany(List<TDomainDocument> objList, IClientSessionHandle? session) =>
+    public Result<List<TDtoKey>?> InsertMany(List<TDtoDocument> objList, IClientSessionHandle? session) =>
         InsertManyAsync(objList, session).Result;
     #endregion
 
     #region Count
-    protected Result<int?> CountWithPredicate(Expression<Func<TDomainDocument, bool>> predicate) =>
-        CountWithPredicate(new List<Expression<Func<TDomainDocument, bool>>> { predicate });
+    protected Result<int?> CountWithPredicate(Expression<Func<TDtoDocument, bool>> predicate) =>
+        CountWithPredicate(new List<Expression<Func<TDtoDocument, bool>>> { predicate });
 
-    private protected Result<int?> CountWithPredicate(List<Expression<Func<TDomainDocument, bool>>> predicates) {
+    private protected Result<int?> CountWithPredicate(List<Expression<Func<TDtoDocument, bool>>> predicates) {
       try {
         var query = GetWithPredicate(predicates);
 
@@ -51,13 +52,19 @@ namespace MaksIT.Vault.Abstractions {
     #endregion
 
     #region Get
-    protected Result<List<TResult>?> GetWithPredicate<TResult>(Expression<Func<TDomainDocument, bool>> predicate, Expression<Func<TDomainDocument, TResult>> selector) =>
-        GetWithPredicate(new List<Expression<Func<TDomainDocument, bool>>> { predicate }, selector, null, null);
+    protected Result<List<TResult>?> GetWithPredicate<TResult>(Expression<Func<TDtoDocument, bool>> predicate, Expression<Func<TDtoDocument, TResult>> selector) =>
+        GetWithPredicate(new List<Expression<Func<TDtoDocument, bool>>> { predicate }, selector, null, null);
 
-    protected Result<List<TResult>?> GetWithPredicate<TResult>(Expression<Func<TDomainDocument, bool>> predicate, Expression<Func<TDomainDocument, TResult>> selector, int? skip, int? limit) =>
-        GetWithPredicate(new List<Expression<Func<TDomainDocument, bool>>> { predicate }, selector, skip, limit);
+    protected Result<List<TResult>?> GetWithPredicate<TResult>(Expression<Func<TDtoDocument, bool>> predicate, Expression<Func<TDtoDocument, TResult>> selector, int? skip, int? limit) =>
+        GetWithPredicate(new List<Expression<Func<TDtoDocument, bool>>> { predicate }, selector, skip, limit);
 
-    protected Result<List<TResult>?> GetWithPredicate<TResult>(List<Expression<Func<TDomainDocument, bool>>> predicates, Expression<Func<TDomainDocument, TResult>> selector, int? skip, int? limit) {
+    protected Result<List<TResult>?> GetWithPredicate<TResult>(
+      List<Expression<Func<TDtoDocument, bool>>> predicates,
+      Expression<Func<TDtoDocument, TResult>> selector,
+      int? skip,
+      int? limit
+    ) {
+
       try {
         var query = GetWithPredicate(predicates).Select(selector);
 
@@ -79,7 +86,7 @@ namespace MaksIT.Vault.Abstractions {
       }
     }
 
-    protected IQueryable<TDomainDocument> GetWithPredicate(List<Expression<Func<TDomainDocument, bool>>> predicates) {
+    protected IQueryable<TDtoDocument> GetWithPredicate(List<Expression<Func<TDtoDocument, bool>>> predicates) {
       var query = GetQuery();
 
       foreach (var predicate in predicates)
@@ -90,32 +97,32 @@ namespace MaksIT.Vault.Abstractions {
     #endregion
 
     #region Update
-    protected Result<Guid?> UpdateWithPredicate(TDomainDocument obj, Expression<Func<TDomainDocument, bool>> predicate, IClientSessionHandle? session) =>
+    protected Result<TDtoKey?> UpdateWithPredicate(TDtoDocument obj, Expression<Func<TDtoDocument, bool>> predicate, IClientSessionHandle? session) =>
         UpdateWithPredicateAsync(obj, predicate, session).Result;
     #endregion
 
     #region UpdateMany
-    public Result<List<Guid>?> UpdateManyWithPredicate(Expression<Func<TDomainDocument, bool>> predicate, List<TDomainDocument> objList, IClientSessionHandle? session) =>
+    public Result<List<TDtoKey>?> UpdateManyWithPredicate(Expression<Func<TDtoDocument, bool>> predicate, List<TDtoDocument> objList, IClientSessionHandle? session) =>
         UpdateManyWithPredicateAsync(objList, predicate, session).Result;
     #endregion
 
     #region Upsert
-    protected Result<Guid?> UpsertWithPredicate(TDomainDocument obj, Expression<Func<TDomainDocument, bool>> predicate, IClientSessionHandle? session) =>
+    protected Result<TDtoKey?> UpsertWithPredicate(TDtoDocument obj, Expression<Func<TDtoDocument, bool>> predicate, IClientSessionHandle? session) =>
         UpsertWithPredicateAsync(obj, predicate, session).Result;
     #endregion
 
     #region UpsertMany
-    public Result<List<Guid>?> UpsertManyWithPredicate(List<TDomainDocument> objList, Expression<Func<TDomainDocument, bool>> predicate, IClientSessionHandle? session) =>
+    public Result<List<TDtoKey>?> UpsertManyWithPredicate(List<TDtoDocument> objList, Expression<Func<TDtoDocument, bool>> predicate, IClientSessionHandle? session) =>
         UpsertManyWithPredicateAsync(objList, predicate, session).Result;
     #endregion
 
     #region Delete
-    protected Result DeleteWithPredicate(Expression<Func<TDomainDocument, bool>> predicate, IClientSessionHandle? session) =>
+    protected Result DeleteWithPredicate(Expression<Func<TDtoDocument, bool>> predicate, IClientSessionHandle? session) =>
         DeleteWithPredicateAsync(predicate, session).Result;
     #endregion
 
     #region DeleteMany
-    protected Result DeleteManyWithPredicate(Expression<Func<TDomainDocument, bool>> predicate, IClientSessionHandle? session) =>
+    protected Result DeleteManyWithPredicate(Expression<Func<TDtoDocument, bool>> predicate, IClientSessionHandle? session) =>
         DeleteManyWithPredicateAsync(predicate, session).Result;
     #endregion
   }
