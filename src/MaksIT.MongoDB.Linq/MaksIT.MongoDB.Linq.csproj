@@ -6,24 +6,24 @@
     <Nullable>enable</Nullable>
     <RootNamespace>MaksIT.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 
-      <!-- NuGet package metadata -->
-      <PackageId>MaksIT.MongoDB.Linq</PackageId>
-      <Version>1.0.0</Version>
-      <Authors>Maksym Sadovnychyy</Authors>
-      <Company>MAKS-IT</Company>
-      <Product>MaksIT.MongoDB.Linq</Product>
-      <Description></Description>
-      <PackageTags></PackageTags>
-      <RepositoryUrl>https://github.com/MAKS-IT-COM/maksit-mongodb-linq</RepositoryUrl>
-      <License>MIT</License>
-      <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
-      <PackageReadmeFile>README.md</PackageReadmeFile>
-    </PropertyGroup>
+    <!-- NuGet package metadata -->
+    <PackageId>MaksIT.MongoDB.Linq</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Maksym Sadovnychyy</Authors>
+    <Company>MAKS-IT</Company>
+    <Product>MaksIT.MongoDB.Linq</Product>
+    <Description>MaksIT.MongoDB.Linq is a .NET library designed to facilitate working with MongoDB using LINQ queries, providing a seamless and intuitive interface for developers to interact with MongoDB databases. The library abstracts common data access patterns, allowing for more efficient and readable code when performing CRUD operations, managing sessions, and handling transactions.</Description>
+    <PackageTags>mongodb;linq;crud;database;management;sessions;transactions;query</PackageTags>
+    <RepositoryUrl>https://github.com/MAKS-IT-COM/maksit-mongodb-linq</RepositoryUrl>
+    <License>MIT</License>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="MaksIT.Results" Version="1.0.0" />
-      <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
-      <None Include="../../README.md" Pack="true" PackagePath="" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MaksIT.Results" Version="1.0.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
+    <None Include="../../README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 
 </Project>
