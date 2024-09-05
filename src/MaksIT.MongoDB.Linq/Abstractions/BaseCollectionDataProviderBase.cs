@@ -93,22 +93,15 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
         Expression<Func<TDtoDocument, bool>> predicate,
         IClientSessionHandle? session) {
       try {
-        var tasks = new List<Task<ReplaceOneResult>>();
-
         foreach (var document in documents) {
-          var filter = Builders<TDtoDocument>.Filter.Where(predicate);
-          var updateOptions = new ReplaceOptions { IsUpsert = false };
-
           if (session != null)
-            tasks.Add(Collection.ReplaceOneAsync(session, filter, document, updateOptions));
+            await Collection.ReplaceOneAsync(session, predicate, document);
           else
-            tasks.Add(Collection.ReplaceOneAsync(filter, document, updateOptions));
+            await Collection.ReplaceOneAsync(predicate, document);
         }
 
-        await Task.WhenAll(tasks);
-
-        var upsertedIds = documents.Select(doc => doc.Id).ToList();
-        return Result<List<TDtoKey>?>.Ok(upsertedIds);
+        var updatedIds = documents.Select(doc => doc.Id).ToList();
+        return Result<List<TDtoKey>?>.Ok(updatedIds);
       }
       catch (Exception ex) {
         Logger.LogError(ex, _errorMessage);
@@ -124,12 +117,14 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
         IClientSessionHandle? session
     ) {
       try {
-        var updateOptions = new ReplaceOptions { IsUpsert = true };
-
-        if (session != null)
-          await Collection.ReplaceOneAsync(session, predicate, document, updateOptions);
-        else
-          await Collection.ReplaceOneAsync(predicate, document, updateOptions);
+        if (session != null) {
+          await Collection.DeleteOneAsync(session, predicate);
+          await Collection.InsertOneAsync(session, document);
+        }
+        else {
+          await Collection.DeleteOneAsync(predicate);
+          await Collection.InsertOneAsync(document);
+        }
 
         return Result<TDtoKey?>.Ok(document.Id);
       }
@@ -146,19 +141,16 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
         Expression<Func<TDtoDocument, bool>> predicate,
         IClientSessionHandle? session) {
       try {
-        var tasks = new List<Task<ReplaceOneResult>>();
-
         foreach (var document in documents) {
-          var filter = Builders<TDtoDocument>.Filter.Where(predicate);
-          var updateOptions = new ReplaceOptions { IsUpsert = true };
-
-          if (session != null)
-            tasks.Add(Collection.ReplaceOneAsync(session, filter, document, updateOptions));
-          else
-            tasks.Add(Collection.ReplaceOneAsync(filter, document, updateOptions));
+          if (session != null) {
+            await Collection.DeleteOneAsync(session, predicate);
+            await Collection.InsertOneAsync(session, document);
+          }
+          else {
+            await Collection.DeleteOneAsync(predicate);
+            await Collection.InsertOneAsync(document);
+          }
         }
-
-        await Task.WhenAll(tasks);
 
         var upsertedIds = documents.Select(doc => doc.Id).ToList();
         return Result<List<TDtoKey>?>.Ok(upsertedIds);
