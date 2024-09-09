@@ -21,7 +21,7 @@ The primary goal of `MaksIT.MongoDB.Linq` is to simplify MongoDB integration in 
 
 To include `MaksIT.MongoDB.Linq` in your .NET project, you can add the package via NuGet:
 
-```shell
+```bash
 dotnet add package MaksIT.MongoDB.Linq
 ```
 
@@ -94,6 +94,67 @@ public class OrganizationDataProvider : CollectionDataProviderBase<OrganizationD
 }
 ```
 
+### Managing Sessions and Transactions
+
+`MaksIT.MongoDB.Linq` offers built-in support for MongoDB sessions and transactions, allowing for complex operations to be executed atomically. Below is an example that demonstrates how to use sessions and transactions with parallel operations involving multiple data providers.
+
+#### Upserting an Organization with Applications and Secrets in a Transaction
+
+In this example, we upsert an organization along with its associated applications and secrets, all within the context of a MongoDB session. The operations are executed in parallel, ensuring that the data is consistently updated across the different collections.
+
+```csharp
+public async Task<Result<Organization?>> UpsertOrganizationAsync(Organization organization)
+{
+    return await _sessionManager.ExecuteInSessionAsync(async session =>
+    {
+        // Step 1: Map Organization to OrganizationDto
+        var organizationDto = new OrganizationDto
+        {
+            Id = organization.Id,
+            Name = organization.Name,
+        };
+
+        // Step 2: Map Applications and Secrets to their respective DTOs
+        var applicationDtos = organization.Applications.Select(application => new ApplicationDto
+        {
+            Id = application.Key,
+            Name = application.Value.Name,
+            OrganizationId = organization.Id,
+        }).ToList();
+
+        var secretDtos = organization.Applications
+            .SelectMany(application => application.Value.Secrets.Select(secret => new SecretDto
+            {
+                Id = secret.Key,
+                Name = secret.Value.Name,
+                ApplicationId = application.Key,
+                Versions = secret.Value.Versions.Select(v => new SecretVersionDto
+                {
+                    Value = v.Value,
+                    Version = v.Version,
+                    CreatedAt = v.CreatedAt
+                }).ToList()
+            })).ToList();
+
+        // Parallel execution of the save operations
+        var organizationTask = _organizationDataProvider.UpsertByIdAsync(organizationDto, session);
+        var applicationsTask = _applicationDataProvider.UpsertManyByIdAsync(applicationDtos, session);
+        var secretsTask = _secretDataProvider.UpsertManyByIdAsync(secretDtos, session);
+
+        // Await all tasks to complete
+        await Task.WhenAll(organizationTask, applicationsTask, secretsTask);
+
+        // Check if all tasks completed successfully
+        if (!organizationTask.Result.IsSuccess || !applicationsTask.Result.IsSuccess || !secretsTask.Result.IsSuccess)
+        {
+            return Result<Organization?>.InternalServerError(null, "An error occurred while writing organization data.");
+        }
+
+        return Result<Organization?>.Ok(organization);
+    });
+}
+```
+
 ### Performing CRUD Operations
 
 #### Inserting a Document
@@ -158,8 +219,6 @@ else
 }
 ```
 
-Here is the section listing the available methods in `BaseCollectionDataProviderBase` and `CollectionDataProviderBase`:
-
 ### Available Methods
 
 #### `BaseCollectionDataProviderBase<T, TDtoDocument, TDtoKey>`
@@ -169,7 +228,9 @@ Here is the section listing the available methods in `BaseCollectionDataProvider
   - `Task<Result<List<TDtoKey>?>> InsertManyAsync(List<TDtoDocument> documents, IClientSessionHandle? session = null)`: Asynchronously inserts multiple documents.
 
 - **Update Operations**
-  - `Task<Result<TDtoKey?>> UpdateWithPredicateAsync(TDtoDocument document, Expression<Func<TDtoDocument, bool>> predicate, IClientSessionHandle? session = null)`: Asynchronously updates a document matching the specified predicate.
+  - `Task<Result<TDtoKey?>> UpdateWithPredicateAsync(TDtoDocument document, Expression<Func<TDtoDocument
+
+, bool>> predicate, IClientSessionHandle? session = null)`: Asynchronously updates a document matching the specified predicate.
   - `Task<Result<List<TDtoKey>?>> UpdateManyWithPredicateAsync(List<TDtoDocument> documents, Expression<Func<TDtoDocument, bool>> predicate, IClientSessionHandle? session = null)`: Asynchronously updates multiple documents matching the specified predicate.
 
 - **Upsert Operations**
@@ -208,24 +269,18 @@ Here is the section listing the available methods in `BaseCollectionDataProvider
 
 These methods provide a comprehensive set of CRUD operations, allowing for flexible and powerful interaction with MongoDB databases through a LINQ-compatible interface.
 
-No, the provided document did not mention the `CombGuidGenerator` utility from the `MaksIT.MongoDB.Linq.Utilities` namespace, which helps generate COMB GUIDs for collections. 
+### Additional Utilities
 
-To improve the documentation, here's an additional section that introduces the `CombGuidGenerator` utility:
-
----
-
-## Additional Utilities
-
-### `CombGuidGenerator`
+#### `CombGuidGenerator`
 
 The `MaksIT.MongoDB.Linq` library also includes a utility class `CombGuidGenerator` for generating COMB GUIDs (COMBined Globally Unique Identifiers) that incorporate both randomness and a timestamp. This is particularly useful for databases where sorting by the GUID is necessary, as it improves index efficiency and query performance.
 
-#### Key Features
+##### Key Features
 
 - **Combines GUID with Timestamp:** Provides better sortability in databases by embedding a timestamp into the GUID.
 - **Multiple Methods for Flexibility:** Supports generating COMB GUIDs with the current UTC timestamp, a specified timestamp, or a base GUID combined with a timestamp.
 
-#### Usage Examples
+##### Usage Examples
 
 ```csharp
 using MaksIT.MongoDB.Linq.Utilities;
@@ -249,7 +304,7 @@ DateTime extractedTimestamp = CombGuidGenerator.ExtractTimestamp(combGuidWithTim
 Console.WriteLine($"Extracted Timestamp from COMB GUID: {extractedTimestamp}");
 ```
 
-### Benefits of Using COMB GUIDs
+#### Benefits of Using COMB GUIDs
 
 - **Improved Indexing Performance:** Embedding a timestamp in the GUID improves the indexing and retrieval performance of documents in databases, especially when using GUIDs as primary keys.
 - **Maintains Uniqueness with Sortability:** COMB GUIDs retain the uniqueness properties of traditional GUIDs while adding a sortable timestamp component, making them ideal for scenarios where both are needed.
