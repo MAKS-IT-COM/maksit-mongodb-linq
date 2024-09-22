@@ -17,10 +17,9 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
     protected CollectionDataProviderBase(
         ILogger<T> logger,
         IMongoClient client,
-        IIdGenerator idGenerator,
         string databaseName,
         string collectionName
-    ) : base(logger, client, idGenerator, databaseName, collectionName) { }
+    ) : base(logger, client, databaseName, collectionName) { }
 
     #region Insert
     public Result<TDtoKey?> Insert(TDtoDocument obj, IClientSessionHandle? session) =>

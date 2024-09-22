@@ -22,7 +22,7 @@ namespace MaksIT.MongoDB.Tests {
 
     public TestableCollectionDataProvider(ILogger<TestableCollectionDataProvider> logger)
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-        : base(logger, new MongoClientMock(), new MongoIdGeneratorMock(), "TestDatabase", "TestCollection") {
+        : base(logger, new MongoClientMock(), "TestDatabase", "TestCollection") {
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
       _inMemoryCollection = new List<TestableDocumentDto>();  // Initialize correctly
     }

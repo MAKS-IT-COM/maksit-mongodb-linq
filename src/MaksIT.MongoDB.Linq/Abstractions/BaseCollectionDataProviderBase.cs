@@ -10,19 +10,15 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
   public abstract class BaseCollectionDataProviderBase<T, TDtoDocument, TDtoKey> : DataProviderBase<T>
       where TDtoDocument : DtoDocumentBase<TDtoKey> {
 
-    protected readonly IIdGenerator IdGenerator;
     protected readonly IMongoCollection<TDtoDocument> Collection;
     protected readonly string _errorMessage = "MaksIT.MongoDB.Linq - Data provider error";
 
     protected BaseCollectionDataProviderBase(
         ILogger<T> logger,
         IMongoClient client,
-        IIdGenerator idGenerator,
         string databaseName,
         string collectionName
     ) : base(logger, client, databaseName) {
-      IdGenerator = idGenerator;
-
       if (!Database.ListCollectionNames().ToList().Contains(collectionName))
         Database.CreateCollection(collectionName);
 
