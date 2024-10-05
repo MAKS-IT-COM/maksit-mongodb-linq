@@ -8,7 +8,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>MaksIT.MongoDB.Linq</PackageId>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Authors>Maksym Sadovnychyy</Authors>
     <Company>MAKS-IT</Company>
     <Product>MaksIT.MongoDB.Linq</Product>
@@ -21,8 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MaksIT.Results" Version="1.0.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
+    <PackageReference Include="MaksIT.Results" Version="1.0.5" />
+    <PackageReference Include="MongoDB.Driver" Version="2.29.0" />
     <None Include="../../README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
