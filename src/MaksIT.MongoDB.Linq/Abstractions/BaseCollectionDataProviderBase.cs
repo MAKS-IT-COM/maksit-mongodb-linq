@@ -89,14 +89,37 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
         Expression<Func<TDtoDocument, bool>> predicate,
         IClientSessionHandle? session) {
       try {
-        foreach (var document in documents) {
-          if (session != null)
-            await Collection.ReplaceOneAsync(session, predicate, document);
-          else
-            await Collection.ReplaceOneAsync(predicate, document);
+        // Step 1: Find the documents that already exist based on the predicate
+        List<TDtoDocument> existingDocuments;
+        if (session != null) {
+          existingDocuments = await Collection.Find(session, predicate).ToListAsync();
+        }
+        else {
+          existingDocuments = await Collection.Find(predicate).ToListAsync();
         }
 
-        var updatedIds = documents.Select(doc => doc.Id).ToList();
+        // Step 2: Get the existing document IDs
+        var existingIds = existingDocuments.Select(doc => doc.Id).ToHashSet();
+
+        // Step 3: Filter the documents to update only those that exist in the collection
+        var documentsToUpdate = documents.Where(doc => existingIds.Contains(doc.Id)).ToList();
+
+        // Step 4: Update each of the existing documents
+        foreach (var document in documentsToUpdate) {
+          // Handling nullable Id by checking both document.Id and x.Id for null
+          var documentPredicate = (Expression<Func<TDtoDocument, bool>>)(x =>
+              (x.Id == null && document.Id == null) ||
+              (x.Id != null && x.Id.Equals(document.Id)));
+
+          if (session != null) {
+            await Collection.ReplaceOneAsync(session, documentPredicate, document);
+          }
+          else {
+            await Collection.ReplaceOneAsync(documentPredicate, document);
+          }
+        }
+
+        var updatedIds = documentsToUpdate.Select(doc => doc.Id).ToList();
         return Result<List<TDtoKey>?>.Ok(updatedIds);
       }
       catch (Exception ex) {
@@ -137,16 +160,18 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
         Expression<Func<TDtoDocument, bool>> predicate,
         IClientSessionHandle? session) {
       try {
-        foreach (var document in documents) {
-          if (session != null) {
-            await Collection.DeleteOneAsync(session, predicate);
-            await Collection.InsertOneAsync(session, document);
-          }
-          else {
-            await Collection.DeleteOneAsync(predicate);
-            await Collection.InsertOneAsync(document);
-          }
-        }
+        // Deletion
+        if (session != null)
+          await Collection.DeleteManyAsync(session, predicate);
+        else
+          await Collection.DeleteManyAsync(predicate);
+
+        // Creation
+        if (session != null)
+          await Collection.InsertManyAsync(session, documents);
+        else
+          await Collection.InsertManyAsync(documents);
+ 
 
         var upsertedIds = documents.Select(doc => doc.Id).ToList();
         return Result<List<TDtoKey>?>.Ok(upsertedIds);
