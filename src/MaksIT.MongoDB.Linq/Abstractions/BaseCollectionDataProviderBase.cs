@@ -1,10 +1,11 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
+
 using MongoDB.Driver;
 
-using MaksIT.MongoDB.Linq.Abstractions.Domain;
+using MaksIT.Core.Abstractions.Dto;
 using MaksIT.Results;
-using MongoDB.Bson.Serialization;
+
 
 namespace MaksIT.MongoDB.Linq.Abstractions {
   public abstract class BaseCollectionDataProviderBase<T, TDtoDocument, TDtoKey> : DataProviderBase<T>

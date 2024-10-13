@@ -3,11 +3,9 @@
 using Microsoft.Extensions.Logging;
 
 using MongoDB.Driver;
-using MongoDB.Bson.Serialization;
-
-using MaksIT.MongoDB.Linq.Abstractions.Domain;
 
 using MaksIT.Results;
+using MaksIT.Core.Abstractions.Dto;
 
 namespace MaksIT.MongoDB.Linq.Abstractions {
 

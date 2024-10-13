@@ -4,10 +4,11 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 using MaksIT.Results;
+using MaksIT.Core.Abstractions.Dto;
 using MaksIT.MongoDB.Linq.Abstractions;
-using MaksIT.MongoDB.Linq.Abstractions.Domain;
 using MaksIT.MongoDB.Linq.Utilities;
 using MaksIT.MongoDB.Linq.Tests.Mock;
+
 
 namespace MaksIT.MongoDB.Tests {
 
