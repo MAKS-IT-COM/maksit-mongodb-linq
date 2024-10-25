@@ -46,6 +46,11 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
     #region InsertMany
     protected virtual async Task<Result<List<TDtoKey>?>> InsertManyAsync(List<TDtoDocument> documents, IClientSessionHandle? session) {
       try {
+        // Check if the documents list is empty
+        if (documents.Count == 0) {
+          return Result<List<TDtoKey>?>.Ok(new List<TDtoKey>());
+        }
+
         if (session != null)
           await Collection.InsertManyAsync(session, documents);
         else
@@ -90,6 +95,11 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
         Expression<Func<TDtoDocument, bool>> predicate,
         IClientSessionHandle? session) {
       try {
+        // Check if the documents list is empty
+        if (documents.Count == 0) {
+          return Result<List<TDtoKey>?>.Ok(new List<TDtoKey>());
+        }
+
         // Step 1: Find the documents that already exist based on the predicate
         List<TDtoDocument> existingDocuments;
         if (session != null) {
@@ -161,6 +171,11 @@ namespace MaksIT.MongoDB.Linq.Abstractions {
         Expression<Func<TDtoDocument, bool>> predicate,
         IClientSessionHandle? session) {
       try {
+        // Check if the documents list is empty
+        if (documents.Count == 0) {
+          return Result<List<TDtoKey>?>.Ok(new List<TDtoKey>());
+        }
+
         // Deletion
         if (session != null)
           await Collection.DeleteManyAsync(session, predicate);
