@@ -349,4 +349,9 @@ SOFTWARE.
 
 ## Contact
 
-For any questions or inquiries, please reach out via GitHub or [email](mailto:maksym.sadovnychyy@gmail.com).
+If you have any questions or need further assistance, feel free to reach out:
+
+- **Email**: [maksym.sadovnychyy@gmail.com](mailto:maksym.sadovnychyy@gmail.com)
+- **Reddit**: [Simplify MongoDB Integration in .NET with MaksIT.MongoDB.Linq
+](https://www.reddit.com/r/MaksIT/comments/1ghgbx5/maksitltobackup_a_simplified_cli_tool_for_windows/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
+
