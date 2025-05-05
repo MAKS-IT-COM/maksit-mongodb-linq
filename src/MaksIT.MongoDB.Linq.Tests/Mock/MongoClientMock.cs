@@ -136,6 +136,26 @@ namespace MaksIT.MongoDB.Linq.Tests.Mock {
       throw new NotImplementedException();
     }
 
+    public ClientBulkWriteResult BulkWrite(IReadOnlyList<BulkWriteModel> models, ClientBulkWriteOptions options = null, CancellationToken cancellationToken = default) {
+      throw new NotImplementedException();
+    }
+
+    public ClientBulkWriteResult BulkWrite(IClientSessionHandle session, IReadOnlyList<BulkWriteModel> models, ClientBulkWriteOptions options = null, CancellationToken cancellationToken = default) {
+      throw new NotImplementedException();
+    }
+
+    public Task<ClientBulkWriteResult> BulkWriteAsync(IReadOnlyList<BulkWriteModel> models, ClientBulkWriteOptions options = null, CancellationToken cancellationToken = default) {
+      throw new NotImplementedException();
+    }
+
+    public Task<ClientBulkWriteResult> BulkWriteAsync(IClientSessionHandle session, IReadOnlyList<BulkWriteModel> models, ClientBulkWriteOptions options = null, CancellationToken cancellationToken = default) {
+      throw new NotImplementedException();
+    }
+
+    public void Dispose() {
+      throw new NotImplementedException();
+    }
+
     #endregion
 
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
