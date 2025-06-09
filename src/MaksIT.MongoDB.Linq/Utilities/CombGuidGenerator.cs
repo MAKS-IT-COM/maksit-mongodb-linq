@@ -1,5 +1,4 @@
-﻿using System;
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 
 namespace MaksIT.MongoDB.Linq.Utilities {
   public static class CombGuidGenerator {

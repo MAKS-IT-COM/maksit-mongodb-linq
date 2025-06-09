@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
 
-namespace MaksIT.MaksIT.MongoDB.Linq.Serializers;
+namespace MaksIT.MongoDB.Linq.Serializers;
 
 public class GuidKeyDictionarySerializer<TValue> : SerializerBase<Dictionary<Guid, TValue>> {
   public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Dictionary<Guid, TValue> value) {

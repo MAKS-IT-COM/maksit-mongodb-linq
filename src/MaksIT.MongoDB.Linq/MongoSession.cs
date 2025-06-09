@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using System;
+
 
 namespace MaksIT.MongoDB.Linq {
   public class DisposableMongoSession : IDisposable {
